@@ -1,4 +1,25 @@
-> [!CAUTION]
+>## 本 Fork 的修改说明
+
+这是基于 [SPlayer](https://github.com/SPlayer-Dev/SPlayer) 的个人 Fork，主要针对播放器 UI 交互进行修复和改进。
+
+### 已修改
+
+* **修复歌词滚动时播放器 Popover 异常闪现的问题**
+
+  * 修复音量、音质、更多功能等播放器弹层在歌词切换/滚动时可能出现的异常行为。
+  * 防止 Popover 打开期间 PlayerControl 被自动隐藏，导致弹层定位失效并闪现到页面左上角。
+  * 新增播放器控制区域的弹层状态管理，使多个 Popover / Dropdown 可以统一处理。
+
+### 相关文件
+
+* `src/components/Player/FullPlayer.vue`
+* `src/components/Player/PlayerRightMenu.vue`
+* `src/composables/usePlayerControlArea.ts`
+
+> 本 Fork 主要用于个人使用及问题修复，基于原 SPlayer 项目进行修改。
+
+
+ [!CAUTION]
 >
 > # 本项目进入维护模式
 >

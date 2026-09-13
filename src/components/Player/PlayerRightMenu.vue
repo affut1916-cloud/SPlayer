@@ -29,7 +29,13 @@
           </n-tag>
         </div>
       </n-popselect>
-      <n-popover v-else trigger="hover" placement="top" :show-arrow="false">
+      <n-popover
+        v-else
+        trigger="hover"
+        placement="top"
+        :show-arrow="false"
+        @update:show="setPopoverShow(qualityPopoverKey, $event)"
+      >
         <template #trigger>
           <n-tag class="quality-tag hidden" type="primary" size="small">
             {{ getQualityName(statusStore.songQuality) }}
@@ -55,13 +61,18 @@
       :options="controlsOptions"
       :show-arrow="false"
       @select="handleControls"
+      @update:show="setPopoverShow(controlsPopoverKey, $event)"
     >
       <div class="menu-icon hidden">
         <SvgIcon name="Controls" />
       </div>
     </n-dropdown>
     <!-- 音量 -->
-    <n-popover :show-arrow="false" :style="{ padding: 0 }">
+    <n-popover
+      :show-arrow="false"
+      :style="{ padding: 0 }"
+      @update:show="setPopoverShow(volumePopoverKey, $event)"
+    >
       <template #trigger>
         <div class="menu-icon hidden" @click.stop="player.toggleMute" @wheel="player.setVolume">
           <SvgIcon :name="statusStore.playVolumeIcon" />
@@ -106,12 +117,24 @@ import { openAutoClose, openChangeRate, openEqualizer, openABLoop } from "@/util
 import { useAudioManager } from "@/core/player/AudioManager";
 import type { DropdownOption } from "naive-ui";
 import { useQualityControl } from "@/composables/useQualityControl";
+import { usePlayerControlArea } from "@/composables/usePlayerControlArea";
 
 const dataStore = useDataStore();
 const statusStore = useStatusStore();
 const settingStore = useSettingStore();
 const musicStore = useMusicStore();
 const player = usePlayerController();
+
+// 控制栏弹层打开状态
+const playerControlArea = usePlayerControlArea();
+const volumePopoverKey = Symbol("volumePopover");
+const controlsPopoverKey = Symbol("controlsPopover");
+const qualityPopoverKey = Symbol("qualityPopover");
+
+// 上报弹层打开状态
+const setPopoverShow = (key: symbol, show: boolean) => {
+  playerControlArea?.setPopoverShow(key, show);
+};
 
 const {
   currentPlayingLevel,
@@ -124,6 +147,18 @@ const {
 
 const showQualityPopover = ref(false);
 const qualityTagRef = ref<HTMLElement | null>(null);
+
+// 音质弹层打开状态同步
+watch(showQualityPopover, (show) => {
+  setPopoverShow(qualityPopoverKey, show);
+});
+
+// 组件卸载时清除弹层状态
+onBeforeUnmount(() => {
+  setPopoverShow(volumePopoverKey, false);
+  setPopoverShow(controlsPopoverKey, false);
+  setPopoverShow(qualityPopoverKey, false);
+});
 
 const handleQualityClick = async () => {
   if (showQualityPopover.value) {

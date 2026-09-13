@@ -94,6 +94,7 @@
 
 <script setup lang="ts">
 import { useMobile } from "@/composables/useMobile";
+import { providePlayerControlArea } from "@/composables/usePlayerControlArea";
 import { useStatusStore, useMusicStore, useSettingStore } from "@/stores";
 import { isElectron } from "@/utils/env";
 
@@ -226,10 +227,18 @@ const {
 /** 鼠标是否在操作区域（菜单/控制栏） */
 const inControlArea = ref(false);
 
+/** 控制栏弹层打开状态 */
+const { hasActivePopover } = providePlayerControlArea();
+
 const playerMove = useThrottleFn(
   () => {
     statusStore.playerMetaShow = true;
-    if (settingStore.autoHidePlayerMeta && !isPending.value && !inControlArea.value) {
+    if (
+      settingStore.autoHidePlayerMeta &&
+      !isPending.value &&
+      !inControlArea.value &&
+      !hasActivePopover.value
+    ) {
       startShow();
     }
   },
@@ -245,17 +254,29 @@ const stopHide = () => {
 
 const resumeHide = () => {
   inControlArea.value = false;
-  if (settingStore.autoHidePlayerMeta) {
+  if (settingStore.autoHidePlayerMeta && !hasActivePopover.value) {
     startShow();
   }
 };
 
 const playerLeave = () => {
-  if (settingStore.autoHidePlayerMeta) {
+  if (settingStore.autoHidePlayerMeta && !hasActivePopover.value) {
     statusStore.playerMetaShow = false;
     stopShow();
   }
 };
+
+/** 弹层打开状态变化时同步自动隐藏计时 */
+watch(hasActivePopover, (show) => {
+  if (show) {
+    stopShow();
+    statusStore.playerMetaShow = true;
+    return;
+  }
+  if (settingStore.autoHidePlayerMeta && !inControlArea.value) {
+    startShow();
+  }
+});
 
 watch(
   () => statusStore.mainColor,
